@@ -8,16 +8,42 @@ let supabase: any
 if (!supabaseUrl || !supabaseAnonKey || supabaseUrl === 'https://your-project.supabase.co') {
   console.warn('Supabase não configurado. Usando modo de demonstração.')
   // Mock supabase client for demo purposes
+  const createMockQuery = () => {
+    const mockQuery = {
+      select: () => mockQuery,
+      insert: (data: any) => mockQuery,
+      update: (data: any) => mockQuery,
+      eq: (column: string, value: any) => mockQuery,
+      single: () => Promise.resolve({ data: null, error: null }),
+      then: (resolve: any) => {
+        if (mockQuery._operation === 'insert') {
+          resolve({ data: [{ id: 'demo-' + Date.now() }], error: null })
+        } else if (mockQuery._operation === 'update') {
+          resolve({ data: [], error: null })
+        } else {
+          resolve({ data: [], error: null })
+        }
+      },
+      _operation: 'select'
+    }
+    
+    // Override methods to set operation type
+    const originalInsert = mockQuery.insert
+    const originalUpdate = mockQuery.update
+    mockQuery.insert = function(data: any) {
+      mockQuery._operation = 'insert'
+      return mockQuery
+    }
+    mockQuery.update = function(data: any) {
+      mockQuery._operation = 'update'
+      return mockQuery
+    }
+    
+    return mockQuery
+  }
+
   supabase = {
-    from: () => ({
-      select: () => Promise.resolve({ data: [], error: null }),
-      insert: () => Promise.resolve({ data: [{ id: 'demo-id' }], error: null }),
-      update: () => Promise.resolve({ data: [], error: null }),
-      eq: () => ({
-        select: () => Promise.resolve({ data: [], error: null }),
-        update: () => Promise.resolve({ data: [], error: null })
-      })
-    })
+    from: (table: string) => createMockQuery()
   }
 } else {
   supabase = createClient(supabaseUrl, supabaseAnonKey, {

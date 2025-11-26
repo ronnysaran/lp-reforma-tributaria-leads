@@ -93,6 +93,9 @@ public/
 
 ## 🎨 Personalização
 
+### Link do Material
+O link do Google Drive para download do material está configurado em `src/components/LeadCaptureForm.tsx` na linha 153. Substitua pelo link desejado.
+
 ### Cores e Estilos
 Edite `tailwind.config.js` para ajustar as cores do tema.
 

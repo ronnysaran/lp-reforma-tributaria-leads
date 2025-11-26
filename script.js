@@ -14,7 +14,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // CONFIGURATION
     // TODO: Replace with your deployed Web App URL
-    const GOOGLE_SCRIPT_URL = 'YOUR_WEB_APP_URL_HEREhttps://script.google.com/macros/s/AKfycbyiEZC_GDQqkxzx48orig2Ib-vr-ue3OmXJPLVwkC_57S3L92AApZ4NVu-oy86VcSxy/exec';
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyiEZC_GDQqkxzx48orig2Ib-vr-ue3OmXJPLVwkC_57S3L92AApZ4NVu-oy86VcSxy/exec';
+
+    // SUPABASE CONFIGURATION
+    // TODO: Replace with your actual project URL and Anon Key
+    const SUPABASE_URL = 'YOUR_SUPABASE_PROJECT_URL';
+    const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+
+    // Initialize Supabase
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     // --- Initialization ---
     generateNPSButtons();
@@ -165,17 +173,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 question: question.value
             };
 
-            // Send to Google Sheets
+            // 1. Send to Supabase (Async)
+            supabase
+                .from('leads')
+                .insert([
+                    {
+                        name: formData.name,
+                        email: formData.email,
+                        whatsapp: formData.whatsapp,
+                        nps: parseInt(formData.nps),
+                        nps_reason: formData.npsReason,
+                        role: formData.role,
+                        challenges: formData.challenges,
+                        question: formData.question,
+                        lgpd: formData.lgpd
+                    }
+                ])
+                .then(({ error }) => {
+                    if (error) console.error('Supabase Error:', error);
+                    else console.log('Saved to Supabase');
+                });
+
+            // 2. Send to Google Sheets
+            console.log('Sending to Google Sheets...', formData);
             fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
-                mode: 'no-cors', // Important for Google Apps Script
+                mode: 'no-cors',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(formData)
             })
                 .then(() => {
-                    // Success
+                    console.log('Google Sheets request sent (no-cors mode)');
+                    // Success UI
                     progressBarFill.style.width = '100%';
                     document.querySelector('.progress-label').textContent = 'Concluído! 100%';
 
@@ -186,8 +217,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     }, 1500);
                 })
                 .catch(error => {
-                    console.error('Error:', error);
-                    alert('Houve um erro ao salvar seus dados. Por favor, tente novamente.');
+                    console.error('Google Sheets Error:', error);
+                    // Even if Sheets fails, we show success if Supabase worked (or just show success to not block user)
+                    // But let's alert for now if it's a network error
+                    alert('Houve um erro de conexão. Seus dados podem não ter sido salvos no Google Sheets.');
                     btnSubmit.textContent = originalText;
                     btnSubmit.disabled = false;
                 });

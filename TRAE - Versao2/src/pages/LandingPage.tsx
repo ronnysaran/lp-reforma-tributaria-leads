@@ -1,14 +1,10 @@
 import { useState } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { Toaster } from 'sonner'
-import LeadCaptureForm from './components/LeadCaptureForm'
-import TermsPrivacy from './pages/TermsPrivacy'
+import LeadCaptureForm from '../components/LeadCaptureForm'
 
-function App() {
+const LandingPage = () => {
   const [showForm, setShowForm] = useState(false)
-  if (typeof window !== 'undefined' && window.location.pathname === '/terms') {
-    return <TermsPrivacy />
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 relative overflow-hidden">
@@ -38,7 +34,7 @@ function App() {
             <div className="text-center space-y-4">
               <button
                 onClick={() => setShowForm(true)}
-                className="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-slate-900 font-bold text-lg md:text-xl px-8 py-3 rounded-full transition-all duration-300 transform hover:scale-105 shadow-2xl w-full max-w-xs mx-auto block animate-float"
+                className="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-slate-900 font-bold text-lg md:text-xl px-8 py-3 rounded-full transition-all duration-300 transform hover:scale-105 shadow-2xl hover:shadow-yellow-500/40 ring-2 ring-yellow-300/40 focus-visible:outline-none focus-visible:ring-4 w-full max-w-xs mx-auto block animate-float"
               >
                 🎯 Quero Baixar o Material Gratuito
               </button>
@@ -97,7 +93,7 @@ function App() {
               <div className={`transition-all duration-700 opacity-100 translate-y-0 text-center`}>
                 <button
                   onClick={() => setShowForm(true)}
-                  className="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-slate-900 font-bold text-xl px-12 py-4 rounded-full transition-all duration-300 transform hover:scale-105 shadow-2xl animate-float"
+                  className="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-slate-900 font-bold text-xl px-12 py-4 rounded-full transition-all duration-300 transform hover:scale-105 shadow-2xl hover:shadow-yellow-500/40 ring-2 ring-yellow-300/40 focus-visible:outline-none focus-visible:ring-4 animate-float"
                 >
                   🎯 Quero Baixar o Material Gratuito
                 </button>
@@ -126,6 +122,24 @@ function App() {
             </div>
           </div>
         </div>
+
+        {/* Footer */}
+        <div className="mt-12 md:mt-20 text-center border-t border-white/20 pt-6 md:pt-8">
+          <div className="flex flex-col md:flex-row justify-center items-center gap-2 md:gap-6 text-blue-300 text-xs md:text-sm">
+            <span className="text-white/60">© 2024 Destrava Brasil</span>
+            <div className="flex gap-4 md:gap-6">
+              <Link to="/terms" className="hover:text-yellow-400 transition-colors duration-200">
+                Termos de Uso
+              </Link>
+              <Link to="/terms" className="hover:text-yellow-400 transition-colors duration-200">
+                Política de Privacidade
+              </Link>
+            </div>
+          </div>
+          <p className="text-blue-400/60 text-xs mt-3">
+            Seus dados estão protegidos conforme a Lei Geral de Proteção de Dados (LGPD)
+          </p>
+        </div>
       </div>
 
       <Toaster position="top-right" />
@@ -133,4 +147,4 @@ function App() {
   )
 }
 
-export default App
+export default LandingPage

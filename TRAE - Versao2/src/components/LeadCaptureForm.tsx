@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
-import { IMaskInput } from 'react-imask'
 import { supabase } from '../lib/supabase'
 
 const formSchema = z.object({
@@ -18,7 +18,6 @@ const formSchema = z.object({
   lgpd: z.boolean().refine((val) => val === true, {
     message: 'Você deve aceitar os termos de LGPD'
   }),
-  comunicacoes: z.boolean().optional()
 })
 
 type FormData = z.infer<typeof formSchema>
@@ -29,12 +28,23 @@ const LeadCaptureForm = () => {
   const [showSuccess, setShowSuccess] = useState(false)
   const [leadId, setLeadId] = useState<string | null>(null)
   
+  // Função para aplicar máscara de telefone
+  const formatPhoneNumber = (value: string) => {
+    const cleaned = value.replace(/\D/g, '')
+    const match = cleaned.match(/^(\d{0,2})(\d{0,5})(\d{0,4})$/)
+    if (match) {
+      const formatted = !match[2] ? match[1] : 
+        `(${match[1]}) ${match[2]}${match[3] ? `-${match[3]}` : ''}`
+      return formatted
+    }
+    return value
+  }
+  
   const { register, handleSubmit, watch, setValue, formState: { errors }, trigger } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       nps: 0,
       lgpd: false,
-      comunicacoes: false
     }
   })
 
@@ -116,8 +126,16 @@ const LeadCaptureForm = () => {
         }
       }
 
+      // Show comprehensive thank you messages
+      toast.success('🎉 Obrigado por compartilhar suas informações!', {
+        description: 'Seu material exclusivo está pronto para download.'
+      })
+      
+      toast.info('📧 Em breve você receberá mais informações no email cadastrado', {
+        description: 'Fique atento à sua caixa de entrada!'
+      })
+
       setShowSuccess(true)
-      toast.success('✅ Cadastro realizado com sucesso!')
     } catch (error) {
       toast.error('❌ Erro ao enviar formulário. Tente novamente.')
       console.error('Erro:', error)
@@ -141,63 +159,84 @@ const LeadCaptureForm = () => {
 
   if (showSuccess) {
     return (
-      <div className="bg-white rounded-2xl p-8 shadow-2xl text-center animate-fade-in">
-        <div className="text-6xl mb-4">🎉</div>
-        <h3 className="text-2xl font-bold text-gray-800 mb-4">
-          Parabéns! Seu material está pronto!
+      <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 md:p-8 shadow-2xl text-center animate-fade-in border border-green-200">
+        <div className="text-5xl md:text-6xl mb-4 animate-bounce">🎉</div>
+        <h3 className="text-xl md:text-2xl font-bold text-green-800 mb-3">
+          Muito Obrigado! 🙏
         </h3>
-        <p className="text-gray-600 mb-8">
-          Obrigado por compartilhar suas informações. Clique no botão abaixo para baixar seu material exclusivo.
-        </p>
-        <a
-          href="/material-reforma-tributaria-desttrava-brasil.html"
-          download="material-reforma-tributaria-desttrava-brasil.html"
-          className="inline-flex items-center bg-green-600 hover:bg-green-700 text-white font-bold text-lg px-8 py-4 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg"
-        >
-          <span className="mr-2">📄</span>
-          Baixar Material Completo (PDF)
-        </a>
-        <p className="text-sm text-gray-500 mt-4">
-          O download começará automaticamente em alguns segundos
-        </p>
+        <div className="bg-white rounded-lg p-4 mb-6 border border-green-100">
+          <p className="text-green-700 mb-3 text-sm md:text-base leading-relaxed">
+            <strong>Parabéns!</strong> Seu cadastro foi realizado com sucesso e seu material exclusivo está pronto para download.
+          </p>
+          <p className="text-green-600 text-sm md:text-base mb-2">
+            📧 <strong>Importante:</strong> Em breve você receberá mais informações e novidades sobre a Reforma Tributária no email cadastrado.
+          </p>
+          <p className="text-green-600 text-xs md:text-sm">
+            💡 <strong>Dica:</strong> Fique atento à sua caixa de entrada e não deixe de aproveitar todo o conteúdo exclusivo que preparamos para você!
+          </p>
+        </div>
+        
+        <div className="mb-6">
+          <h4 className="text-lg font-semibold text-green-800 mb-3">Seu Próximo Passo:</h4>
+          <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
+            <p className="text-blue-800 font-medium mb-2">📚 Baixe agora seu material completo:</p>
+            <p className="text-blue-700 text-sm mb-3">
+              Um guia exclusivo com tudo o que você precisa saber sobre a Reforma Tributária e seus impactos.
+            </p>
+            <a
+              href="https://drive.google.com/file/d/1BP8KXsooNvj5-EOOkAFZHK11iDIiqzen/view?usp=drive_link"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold text-base md:text-lg px-6 md:px-8 py-3 md:py-4 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg"
+            >
+              <span className="mr-2">📄</span>
+              Baixar Material Completo (PDF)
+            </a>
+          </div>
+        </div>
+
+        <div className="bg-yellow-50 rounded-lg p-3 border border-yellow-200">
+          <p className="text-yellow-800 text-xs md:text-sm font-medium">
+            ⚡ O download começará automaticamente em alguns segundos
+          </p>
+          <p className="text-yellow-700 text-xs mt-1">
+            Caso não inicie automaticamente, clique no botão acima.
+          </p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="bg-white rounded-2xl p-8 shadow-2xl">
+    <div className="bg-gradient-to-br from-white to-blue-50 rounded-xl p-3 md:p-4 shadow-lg border border-blue-100">
       {/* Progress Bar */}
       {currentStep === 2 && (
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-blue-600">Progresso</span>
-            <span className="text-sm font-bold text-blue-600">50%</span>
+        <div className="mb-3 md:mb-4">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs font-medium text-blue-600">Progresso</span>
+            <span className="text-xs font-bold text-blue-600">50%</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div className="bg-blue-600 h-2 rounded-full w-1/2 transition-all duration-300"></div>
+          <div className="w-full bg-blue-100 rounded-full h-1">
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 h-1 rounded-full w-1/2 transition-all duration-300"></div>
           </div>
-          <p className="text-center text-blue-600 font-semibold mt-2">Quase lá!</p>
+          <p className="text-center text-blue-600 font-medium mt-1 text-xs">🎯 Quase lá!</p>
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 md:space-y-4">
         {/* Step 1 */}
         {currentStep === 1 && (
-          <div className="space-y-6 animate-fade-in">
-            <div className="text-center mb-6">
-              <h3 className="text-xl font-bold text-gray-800">Dados Básicos</h3>
-              <p className="text-gray-600">Preencha seus dados para acessar o material</p>
-            </div>
+          <div className="space-y-3 md:space-y-4 animate-fade-in">
 
             {/* Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 Nome Completo *
               </label>
               <input
                 {...register('nome')}
                 type="text"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="w-full px-3 py-2 border-2 border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white shadow-sm text-sm"
                 placeholder="Seu nome completo"
               />
               {errors.nome && (
@@ -207,13 +246,13 @@ const LeadCaptureForm = () => {
 
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 Email *
               </label>
               <input
                 {...register('email')}
                 type="email"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="w-full px-3 py-2 border-2 border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white shadow-sm text-sm"
                 placeholder="seu@email.com"
               />
               {errors.email && (
@@ -223,15 +262,19 @@ const LeadCaptureForm = () => {
 
             {/* WhatsApp */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 WhatsApp *
               </label>
-              <IMaskInput
+              <input
                 {...register('whatsapp')}
-                mask="(00) 00000-0000"
                 type="tel"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="w-full px-3 py-2 border-2 border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white shadow-sm text-sm"
                 placeholder="(00) 00000-0000"
+                onInput={(e) => {
+                  const target = e.target as HTMLInputElement
+                  target.value = formatPhoneNumber(target.value)
+                }}
+                maxLength={15}
               />
               {errors.whatsapp && (
                 <p className="text-red-500 text-sm mt-1">{errors.whatsapp.message}</p>
@@ -240,104 +283,87 @@ const LeadCaptureForm = () => {
 
             {/* NPS Rating */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-4">
-                Como você avalia a palestra sobre Reforma Tributária? *
-              </label>
-              <div className="flex justify-center space-x-2 mb-4">
+              <label className="block text-sm font-medium text-slate-700 mb-2">Como você avalia o conteúdo da palestra? *</label>
+              <div className="flex justify-center space-x-1 mb-2">
                 {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((number) => (
                   <button
                     key={number}
                     type="button"
                     onClick={() => setValue('nps', number)}
-                    className={`w-10 h-10 rounded-full font-bold transition-all ${
+                    className={`w-7 h-7 md:w-8 md:h-8 rounded-full font-bold text-xs md:text-sm transition-all duration-200 ${
                       watchNps === number
-                        ? 'bg-blue-600 text-white scale-110'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white scale-110 shadow-lg'
+                        : 'bg-slate-200 text-slate-700 hover:bg-slate-300 hover:scale-105'
                     }`}
                   >
                     {number}
                   </button>
                 ))}
               </div>
-              <div className="flex justify-between text-xs text-gray-500">
-                <span>Péssimo</span>
-                <span>Excelente</span>
+              <div className="flex justify-between text-xs text-slate-500 px-1">
+                <span className="text-red-500">Ruim</span>
+                <span className="text-green-600">Ótimo</span>
               </div>
               {errors.nps && (
-                <p className="text-red-500 text-sm mt-2 text-center">{errors.nps.message}</p>
+                <p className="text-red-500 text-xs mt-1 text-center">{errors.nps.message}</p>
               )}
             </div>
 
             {/* NPS Comment */}
             {watchNps > 0 && (
               <div className="animate-fade-in">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Por que você deu essa nota? (opcional)
+                <label className="block text-xs font-medium text-slate-600 mb-1">
+                  Por que essa nota? (opcional)
                 </label>
                 <textarea
                   {...register('nps_comentario')}
-                  rows={3}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="Conte-nos o motivo da sua avaliação..."
+                  rows={2}
+                  className="w-full px-2 py-1 border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white text-xs"
+                  placeholder="Motivo da nota..."
                 />
               </div>
             )}
 
             {/* LGPD */}
-            <div className="space-y-3">
-              <div className="flex items-start space-x-3">
+            <div className="space-y-2">
+              <div className="flex items-start space-x-2">
                 <input
                   {...register('lgpd')}
                   type="checkbox"
-                  className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="mt-0.5 w-3 h-3 text-blue-600 border-slate-300 rounded"
                 />
-                <label className="text-sm text-gray-700">
-                  Concordo com os <a href="#" className="text-blue-600 hover:underline">termos de uso</a> e{' '}
-                  <a href="#" className="text-blue-600 hover:underline">política de privacidade</a> *
+                <label className="text-xs text-slate-600 leading-tight">
+                  Concordo com os <Link to="/terms" className="text-blue-600 hover:underline">termos</Link> e{' '}
+                  <Link to="/terms" className="text-blue-600 hover:underline">privacidade</Link> *
                 </label>
               </div>
               {errors.lgpd && (
-                <p className="text-red-500 text-sm">{errors.lgpd.message}</p>
+                <p className="text-red-500 text-xs">{errors.lgpd.message}</p>
               )}
 
-              <div className="flex items-start space-x-3">
-                <input
-                  {...register('comunicacoes')}
-                  type="checkbox"
-                  className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                />
-                <label className="text-sm text-gray-700">
-                  Desejo receber comunicações sobre Reforma Tributária e outros conteúdos do Destrava Brasil
-                </label>
-              </div>
+              
             </div>
 
             <button
               type="button"
               onClick={nextStep}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-lg transition-all duration-300 transform hover:scale-105"
-            >
-              Avançar →
-            </button>
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-2 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-md text-sm"
+            >Continuar →</button>
           </div>
         )}
 
         {/* Step 2 */}
         {currentStep === 2 && (
-          <div className="space-y-6 animate-fade-in">
-            <div className="text-center mb-6">
-              <h3 className="text-xl font-bold text-gray-800">Complete seu cadastro</h3>
-              <p className="text-gray-600">Queremos conhecer você melhor</p>
-            </div>
+          <div className="space-y-3 md:space-y-4 animate-fade-in">
 
             {/* Area of Expertise */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 Área de atuação *
               </label>
               <select
                 {...register('area_atuacao')}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="w-full px-3 py-2 border-2 border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white shadow-sm text-sm"
               >
                 <option value="">Selecione sua área</option>
                 <option value="contabilidade">Contabilidade</option>
@@ -350,56 +376,58 @@ const LeadCaptureForm = () => {
                 <option value="outro">Outro</option>
               </select>
               {errors.area_atuacao && (
-                <p className="text-red-500 text-sm mt-1">{errors.area_atuacao.message}</p>
+                <p className="text-red-500 text-xs mt-1">{errors.area_atuacao.message}</p>
               )}
             </div>
 
             {/* Challenges */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Quais são seus principais desafios na sua área hoje? *
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Principais desafios na sua área? *
               </label>
               <textarea
                 {...register('desafios')}
-                rows={4}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                rows={2}
+                className="w-full px-3 py-2 border-2 border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white shadow-sm text-sm"
                 placeholder="Descreva os principais desafios que você enfrenta..."
               />
               {errors.desafios && (
-                <p className="text-red-500 text-sm mt-1">{errors.desafios.message}</p>
+                <p className="text-red-500 text-xs mt-1">{errors.desafios.message}</p>
               )}
             </div>
 
             {/* Questions for Speaker */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Se você pudesse ter 1h de conversa com o Palestrante, quais perguntas você gostaria de fazer a ele? *
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Perguntas para o palestrante? *
               </label>
               <textarea
                 {...register('perguntas_palestrante')}
-                rows={4}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                rows={2}
+                className="w-full px-3 py-2 border-2 border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white shadow-sm text-sm"
                 placeholder="Quais dúvidas você gostaria de esclarecer?..."
               />
               {errors.perguntas_palestrante && (
-                <p className="text-red-500 text-sm mt-1">{errors.perguntas_palestrante.message}</p>
+                <p className="text-red-500 text-xs mt-1">{errors.perguntas_palestrante.message}</p>
               )}
             </div>
 
-            <div className="flex space-x-4">
+            <div className="flex space-x-2 pt-2">
               <button
                 type="button"
                 onClick={prevStep}
-                className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-4 rounded-lg transition-all duration-300"
+                className="flex-1 bg-gradient-to-r from-slate-400 to-slate-500 hover:from-slate-500 hover:to-slate-600 text-white font-medium py-2 rounded-lg transition-all duration-300 text-sm"
               >
                 ← Voltar
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-bold py-4 rounded-lg transition-all duration-300 transform hover:scale-105 disabled:transform-none"
+                aria-label="Baixar material gratuito"
+                className="flex-1 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:from-slate-400 disabled:to-slate-400 text-white font-semibold py-2 rounded-lg transition-all duration-300 transform hover:scale-105 disabled:transform-none shadow-lg hover:shadow-emerald-500/40 ring-2 ring-emerald-300/40 focus-visible:outline-none focus-visible:ring-4 text-sm"
               >
-                {isSubmitting ? 'Enviando...' : 'Baixar Material Gratuito'}
+                <span className="text-base">📥</span>
+                {isSubmitting ? 'Enviando...' : 'Baixar Material'}
               </button>
             </div>
           </div>
